@@ -1,15 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import seaborn as sns; sns.set()
 from matplotlib.colors import LinearSegmentedColormap
 
 #Set path to input data file
-path = '/home/morgan/subduction_3/segment_feature_class_data.txt'
+path = 'segment_feature_class_data.txt'
 
 #Set event type (sSSE or lSSE)
-event_type = 'sSSE'
+event_type = 'lSSE'
 
 # Read data
 data=pd.read_csv(path, sep=" ")
@@ -419,29 +418,38 @@ preds.to_csv('predictions.csv')
 
 # We can also check the effect of individual features on the fit
 # for the algorithms that use a linear discriminator
-paramsLR = pd.Series(modelLR.coef_[0], index=Xdata.columns)
-paramsSVM = pd.Series(modelSVM.coef_[0], index=Xdata.columns)
-paramsLDA = pd.Series(modelLDA.coef_[0], index=Xdata.columns)
+#paramsLR = pd.Series(modelLR.coef_[0], index=Xdata.columns)
+#paramsSVM = pd.Series(modelSVM.coef_[0], index=Xdata.columns)
+#paramsLDA = pd.Series(modelLDA.coef_[0], index=Xdata.columns)
 
 # We can also get the standard deviation of those parameters from
 # resampling the feature space and fitting the ML models 1000 times
 from sklearn.utils import resample
-errLR = np.std([modelLR.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)], 0)
-errSVM = np.std([modelSVM.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)], 0)
-errLDA = np.std([modelLDA.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)], 0)
+LR_coef = [modelLR.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)]
+
+SVM_coef = [modelSVM.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)]
+
+LDA_coef = [modelLDA.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)]
+
+errLR = np.std(LR_coef, 0)
+paramsLR = np.mean(LR_coef, 0)
+errSVM = np.std(SVM_coef, 0)
+paramsSVM = np.mean(SVM_coef, 0)
+errLDA = np.std(LDA_coef, 0)
+paramsLDA = np.mean(LDA_coef, 0)
 
 # Print out the parameters and their spread
 print('\nLogistic Regression')
-print(pd.DataFrame({'effect': paramsLR.round(2),
+print(pd.DataFrame({'effect': paramsLR[0].round(2),
                     'error': errLR[0].round(2)}))
 print('\nSupport Vector Machine')
-print(pd.DataFrame({'effect': paramsSVM.round(2),
+print(pd.DataFrame({'effect': paramsSVM[0].round(2),
                     'error': errSVM[0].round(2)}))
 print('\nLinear Discriminant Analysis')
-print(pd.DataFrame({'effect': paramsLDA.round(2),
+print(pd.DataFrame({'effect': paramsLDA[0].round(2),
                     'error': errLDA[0].round(2)}))
 
 # Since the features have been normalized (using the Robust scaler),
