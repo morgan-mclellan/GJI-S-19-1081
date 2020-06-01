@@ -2,7 +2,9 @@
 
 Source code for results of "Unconvering the physical controls of deep slow slip using supervised classfication of underiding plate featuress" by McLellan and Audet, 2020.
 
+Data input file is "segment_feaure_class_data.txt". The path to the file must be set in first line after importing packages.
 
+The event type must be set as either "sSSE" or "lSSE".
 
 python3.7
 
