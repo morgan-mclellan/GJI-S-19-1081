@@ -6,10 +6,10 @@ import seaborn as sns; sns.set()
 from matplotlib.colors import LinearSegmentedColormap
 
 #Set path to input data file
-path = ''
+path = '/home/morgan/subduction_3/segment_feature_class_data.txt'
 
 #Set event type (sSSE or lSSE)
-event_type = ''
+event_type = 'sSSE'
 
 # Read data
 data=pd.read_csv(path, sep=" ")
@@ -159,7 +159,7 @@ for k in range(10):
     
     for model, name in models:
         ssplit = model_selection.ShuffleSplit(n_splits=50,test_size=0.3,random_state=seed)
-        cvss_results = model_selection.cross_val_score(model, X_sm, y_sm, scoring=scoring)
+        cvss_results = model_selection.cross_val_score(model, X_sm, y_sm, cv=ssplit, scoring=scoring)
         results.append(cvss_results)
 
         if name == 'GNB':
@@ -194,8 +194,8 @@ for k in range(10):
         names.append(name)
     RF_mean_sample = sum(mean_list)/len(mean_list)
     RF_std_sample = sum(std_list)/len(std_list)
-    RF_mean.append(RF_mean)
-    RF_std.append(RF_std)
+    RF_mean.append(RF_mean_sample)
+    RF_std.append(RF_std_sample)
 
 
     ###### PRECISION AND RECALL ######
@@ -348,6 +348,34 @@ for k in range(10):
     for i in range(len(seg_num_list)): 
         seg_num_list[i] = seg_num_list[i]/10
     RF_pred_array.append(seg_num_list)
+
+print('GNB mean: '+str(np.mean(GNB_mean)))
+print('RF mean: '+str(np.mean(RF_mean)))
+print('LR mean: '+str(np.mean(LR_mean)))
+print('SVM mean: '+str(np.mean(SVM_mean)))
+print('KNN mean: '+str(np.mean(KNN_mean)))
+print('LDA mean: '+str(np.mean(LDA_mean)))
+
+print('GNB std: '+str(np.mean(GNB_std)))
+print('RF std: '+str(np.mean(RF_std)))
+print('LR std: '+str(np.mean(LR_std)))
+print('SVM std: '+str(np.mean(SVM_std)))
+print('KNN std: '+str(np.mean(KNN_std)))
+print('LDA std: '+str(np.mean(LDA_std)))
+
+print('GNB precision: '+str(np.mean(GNB_precision)))
+print('RF precision: '+str(np.mean(RF_precision)))
+print('LR precision: '+str(np.mean(LR_precision)))
+print('SVM precision: '+str(np.mean(SVM_precision)))
+print('KNN precision: '+str(np.mean(KNN_precision)))
+print('LDA precision: '+str(np.mean(LDA_precision)))
+
+print('GNB recall: '+str(np.mean(GNB_recall)))
+print('RF recall: '+str(np.mean(RF_recall)))
+print('LR recall: '+str(np.mean(LR_recall)))
+print('SVM recall: '+str(np.mean(SVM_recall)))
+print('KNN recall: '+str(np.mean(KNN_recall)))
+print('LDA recall: '+str(np.mean(LDA_recall)))
 
 # Get average predicted probability of SSE occurrence for each ML model
 GNB_pred_array = np.array(GNB_pred_array)
