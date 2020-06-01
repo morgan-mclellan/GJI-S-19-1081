@@ -1,5 +1,9 @@
 # McLellan_GJI_2020
 
+Source code for results of "Unconvering the physical controls of deep slow slip using supervised classfication of underiding plate featuress" by McLellan and Audet, 2020.
+
+
+
 python3.7
 
 ##PACKAGE VERSIONS##
