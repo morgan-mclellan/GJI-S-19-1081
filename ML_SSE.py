@@ -1,14 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import seaborn as sns; sns.set()
 from matplotlib.colors import LinearSegmentedColormap
 
 #Set path to input data file
-path = 'segment_feature_class_data.txt'
+path = ''
 
 #Set event type (sSSE or lSSE)
-event_type = 'lSSE'
+event_type = ''
 
 # Read data
 data=pd.read_csv(path, sep=" ")
@@ -57,7 +58,6 @@ Xdata = data_input
 Xdata = Xdata.drop('sSSE', axis=1)
 Xdata = Xdata.drop('lSSE', axis=1)
 y = data_input[event_type]
-
 
 
 # Print the total number of inputs as well as the number of inputs for each class 
@@ -348,33 +348,23 @@ for k in range(10):
         seg_num_list[i] = seg_num_list[i]/10
     RF_pred_array.append(seg_num_list)
 
-print('GNB mean: '+str(np.mean(GNB_mean)))
-print('RF mean: '+str(np.mean(RF_mean)))
-print('LR mean: '+str(np.mean(LR_mean)))
-print('SVM mean: '+str(np.mean(SVM_mean)))
-print('KNN mean: '+str(np.mean(KNN_mean)))
-print('LDA mean: '+str(np.mean(LDA_mean)))
+mean_data = np.array([np.mean(var)*100. for var in [GNB_mean, RF_mean, 
+    LR_mean, SVM_mean, KNN_mean, LDA_mean]])
+std_data = np.array([np.mean(var)*100. for var in [GNB_std, RF_std, 
+    LR_std, SVM_std, KNN_std, LDA_std]])
+precision_data = np.array([np.mean(var)*100. for var in [GNB_precision, RF_precision, 
+    LR_precision, SVM_precision, KNN_precision, LDA_precision]])
+recall_data = np.array([np.mean(var)*100. for var in [GNB_recall, RF_recall, 
+    LR_recall, SVM_recall, KNN_recall, LDA_recall]])
 
-print('GNB std: '+str(np.mean(GNB_std)))
-print('RF std: '+str(np.mean(RF_std)))
-print('LR std: '+str(np.mean(LR_std)))
-print('SVM std: '+str(np.mean(SVM_std)))
-print('KNN std: '+str(np.mean(KNN_std)))
-print('LDA std: '+str(np.mean(LDA_std)))
+d = {'Mean': pd.Series(mean_data, index=['GNB', 'RF', 'LR', 'SVM', 'KNN', 'LDA']),
+'Std': pd.Series(std_data, index=['GNB', 'RF', 'LR', 'SVM', 'KNN', 'LDA']),
+'Recall': pd.Series(recall_data, index=['GNB', 'RF', 'LR', 'SVM', 'KNN', 'LDA']),
+'Precision': pd.Series(precision_data, index=['GNB', 'RF', 'LR', 'SVM', 'KNN', 'LDA'])}
+df = pd.DataFrame(d)
+pd.options.display.float_format = '{:,.1f}'.format
+print(df)
 
-print('GNB precision: '+str(np.mean(GNB_precision)))
-print('RF precision: '+str(np.mean(RF_precision)))
-print('LR precision: '+str(np.mean(LR_precision)))
-print('SVM precision: '+str(np.mean(SVM_precision)))
-print('KNN precision: '+str(np.mean(KNN_precision)))
-print('LDA precision: '+str(np.mean(LDA_precision)))
-
-print('GNB recall: '+str(np.mean(GNB_recall)))
-print('RF recall: '+str(np.mean(RF_recall)))
-print('LR recall: '+str(np.mean(LR_recall)))
-print('SVM recall: '+str(np.mean(SVM_recall)))
-print('KNN recall: '+str(np.mean(KNN_recall)))
-print('LDA recall: '+str(np.mean(LDA_recall)))
 
 # Get average predicted probability of SSE occurrence for each ML model
 GNB_pred_array = np.array(GNB_pred_array)
@@ -401,7 +391,11 @@ preds[2] = LR_pred_mean
 preds[3] = SVM_pred_mean
 preds[4] = KNN_pred_mean
 
-weights = [0.3, 1.0, 0.5, 0.5, 0.3]
+if event_type=='sSSE':
+    weights = [0.3, 1.0, 0.5, 0.5, 0.3]
+elif event_type=='lSSE':
+    weights = [0., 1.0, 0., 0.5, 0.5]
+
 preds['weighted_pred'] = (preds*weights).sum(axis=1)/sum(weights)
 
 weighted_pred = pd.Series(preds['weighted_pred'], index=y_.index)
@@ -416,40 +410,36 @@ preds.to_csv('predictions.csv')
 
 ###### EVALUATE PREDICTIVE POWER OF FEATURES USING COEFFICIENTS ######
 
+modelLR.fit(X_scale, y)
+modelSVM.fit(X_scale, y)
+modelLDA.fit(X_scale, y)
+
 # We can also check the effect of individual features on the fit
 # for the algorithms that use a linear discriminator
-#paramsLR = pd.Series(modelLR.coef_[0], index=Xdata.columns)
-#paramsSVM = pd.Series(modelSVM.coef_[0], index=Xdata.columns)
-#paramsLDA = pd.Series(modelLDA.coef_[0], index=Xdata.columns)
+paramsLR = pd.Series(modelLR.coef_[0], index=Xdata.columns)
+paramsSVM = pd.Series(modelSVM.coef_[0], index=Xdata.columns)
+paramsLDA = pd.Series(modelLDA.coef_[0], index=Xdata.columns)
 
 # We can also get the standard deviation of those parameters from
 # resampling the feature space and fitting the ML models 1000 times
 from sklearn.utils import resample
-LR_coef = [modelLR.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)]
-
-SVM_coef = [modelSVM.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)]
-
-LDA_coef = [modelLDA.fit(*resample(X_scale, y)).coef_
-    for i in range(1000)]
-
-errLR = np.std(LR_coef, 0)
-paramsLR = np.mean(LR_coef, 0)
-errSVM = np.std(SVM_coef, 0)
-paramsSVM = np.mean(SVM_coef, 0)
-errLDA = np.std(LDA_coef, 0)
-paramsLDA = np.mean(LDA_coef, 0)
+errLR = np.std([modelLR.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)], 0)
+errSVM = np.std([modelSVM.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)], 0)
+errLDA = np.std([modelLDA.fit(*resample(X_scale, y)).coef_
+    for i in range(1000)], 0)
 
 # Print out the parameters and their spread
+pd.options.display.float_format = '{:,.2f}'.format
 print('\nLogistic Regression')
-print(pd.DataFrame({'effect': paramsLR[0].round(2),
+print(pd.DataFrame({'effect': paramsLR.round(2),
                     'error': errLR[0].round(2)}))
 print('\nSupport Vector Machine')
-print(pd.DataFrame({'effect': paramsSVM[0].round(2),
+print(pd.DataFrame({'effect': paramsSVM.round(2),
                     'error': errSVM[0].round(2)}))
 print('\nLinear Discriminant Analysis')
-print(pd.DataFrame({'effect': paramsLDA[0].round(2),
+print(pd.DataFrame({'effect': paramsLDA.round(2),
                     'error': errLDA[0].round(2)}))
 
 # Since the features have been normalized (using the Robust scaler),
