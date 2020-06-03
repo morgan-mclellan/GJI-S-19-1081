@@ -1,6 +1,6 @@
 # McLellan_GJI_2020
 
-Source code for results of "Unconvering the physical controls of deep slow slip using supervised classfication of underiding plate featuress" by McLellan and Audet, 2020.
+Source code for results of "Unconvering the physical controls of deep slow slip using supervised classfication of subducting plate featuress" by McLellan and Audet, 2020.
 
 Data input file is "segment_feaure_class_data.txt". The path to the file must be set in first line after importing packages.
 
